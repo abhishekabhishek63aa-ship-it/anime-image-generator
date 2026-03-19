@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anime Image Generator</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+    min-height: 100vh;
+    font-family: 'Segoe UI', sans-serif;
+    color: white;
+  }
+  .header {
+    text-align: center;
+    padding: 30px 20px 10px;
+  }
+  .header h1 {
+    font-size: 2rem;
+    background: linear-gradient(90deg, #ff6ec7, #a78bfa, #60a5fa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 5px;
+  }
+  .header p { color: #a0aec0; font-size: 0.9rem; }
+  .container { max-width: 700px; margin: 0 auto; padding: 20px; }
+  .card {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  label { display: block; margin-bottom: 8px; font-size: 0.85rem; color: #a78bfa; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
+  textarea {
+    width: 100%; padding: 14px; border-radius: 10px;
+    background: rgba(255,255,255,0.08); border: 1px solid rgba(167,139,250,0.3);
+    color: white; font-size: 1rem; resize: vertical; min-height: 100px;
+    outline: none; transition: border 0.3s;
+  }
+  textarea:focus { border-color: #a78bfa; }
+  .styles-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 5px;
+  }
+  .style-btn {
+    padding: 10px 5px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.05); color: white; cursor: pointer;
+    font-size: 0.8rem; text-align: center; transition: all 0.2s;
+  }
+  .style-btn:hover, .style-btn.active {
+    background: rgba(167,139,250,0.3); border-color: #a78bfa;
+  }
+  .options-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 5px; }
+  select {
+    width: 100%; padding: 12px; border-radius: 10px;
+    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+    color: white; font-size: 0.95rem; outline: none; cursor: pointer;
+  }
+  select option { background: #302b63; }
+  .generate-btn {
+    width: 100%; padding: 16px; border-radius: 12px; border: none;
+    background: linear-gradient(135deg, #a78bfa, #60a5fa);
+    color: white; font-size: 1.1rem; font-weight: 700;
+    cursor: pointer; letter-spacing: 1px; transition: all 0.3s;
+    margin-top: 10px;
+  }
+  .generate-btn:hover { transform: translateY(-2px); opacity: 0.9; }
+  .generate-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .result-area { text-align: center; }
+  .result-area img {
+    max-width: 100%; border-radius: 14px;
+    border: 2px solid rgba(167,139,250,0.4); display: none;
+  }
+  .loading {
+    display: none; padding: 40px;
+    font-size: 1rem; color: #a78bfa;
+  }
+  .spinner {
+    width: 50px; height: 50px; border: 4px solid rgba(167,139,250,0.2);
+    border-top-color: #a78bfa; border-radius: 50%;
+    animation: spin 0.8s linear infinite; margin: 0 auto 15px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .download-btn {
+    display: none; margin: 15px auto 0; padding: 12px 30px;
+    border-radius: 10px; border: none;
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white; font-size: 1rem; font-weight: 600;
+    cursor: pointer; transition: all 0.3s;
+  }
+  .download-btn:hover { transform: translateY(-2px); opacity: 0.9; }
+  .error-msg {
+    display: none; color: #fc8181; background: rgba(252,129,129,0.1);
+    border: 1px solid rgba(252,129,129,0.3); border-radius: 10px;
+    padding: 15px; margin-top: 15px; font-size: 0.9rem;
+  }
+  .quick-prompts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .qp-btn {
+    padding: 6px 14px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.07); color: #e2e8f0;
+    cursor: pointer; font-size: 0.8rem; transition: all 0.2s;
+  }
+  .qp-btn:hover { background: rgba(167,139,250,0.25); border-color: #a78bfa; }
+  footer { text-align: center; padding: 20px; color: #4a5568; font-size: 0.8rem; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>✨ Anime Image Generator</h1>
+  <p>Free & Unlimited • Powered by Pollinations AI</p>
+</div>
+
+<div class="container">
+  <div class="card">
+    <label>🎨 Anime Style</label>
+    <div class="styles-grid">
+      <button class="style-btn active" onclick="selectStyle(this,'')">🌸 Default</button>
+      <button class="style-btn" onclick="selectStyle(this,'naruto ninja style')">🍃 Naruto</button>
+      <button class="style-btn" onclick="selectStyle(this,'demon slayer kimetsu style')">⚔️ Demon Slayer</button>
+      <button class="style-btn" onclick="selectStyle(this,'dragon ball saiyan style')">🔥 Dragon Ball</button>
+      <button class="style-btn" onclick="selectStyle(this,'one piece pirate style')">☠️ One Piece</button>
+      <button class="style-btn" onclick="selectStyle(this,'cyberpunk neon anime style')">🤖 Cyberpunk</button>
+      <button class="style-btn" onclick="selectStyle(this,'chibi kawaii cute style')">🎀 Chibi</button>
+      <button class="style-btn" onclick="selectStyle(this,'dark gothic fantasy anime')">🌑 Dark Gothic</button>
+      <button class="style-btn" onclick="selectStyle(this,'isekai fantasy magical')">🧙 Isekai</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <label>⚡ Quick Prompts</label>
+    <div class="quick-prompts">
+      <button class="qp-btn" onclick="setPrompt('anime girl with glowing eyes')">🌸 Anime Girl</button>
+      <button class="qp-btn" onclick="setPrompt('powerful warrior with sword')">⚔️ Warrior</button>
+      <button class="qp-btn" onclick="setPrompt('dragon in the sky')">🐉 Dragon</button>
+      <button class="qp-btn" onclick="setPrompt('magic witch casting spell')">🧙 Witch</button>
+      <button class="qp-btn" onclick="setPrompt('epic hero with armor')">🦸 Hero</button>
+      <button class="qp-btn" onclick="setPrompt('beautiful anime landscape sunset')">🌅 Landscape</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <label>✏️ Your Prompt</label>
+    <textarea id="prompt" placeholder="Describe your anime image... (e.g. anime girl with blue eyes and katana)"></textarea>
+
+    <div class="options-row" style="margin-top:15px;">
+      <div>
+        <label>📐 Size</label>
+        <select id="size">
+          <option value="512x512">512×512</option>
+          <option value="768x768" selected>768×768 HD</option>
+          <option value="1024x1024">1024×1024 Full HD</option>
+          <option value="1024x768">1024×768 Wide</option>
+        </select>
+      </div>
+      <div>
+        <label>✨ Quality</label>
+        <select id="quality">
+          <option value="">Standard</option>
+          <option value="high quality" selected>High Quality</option>
+          <option value="masterpiece 8k ultra detailed">8K Masterpiece</option>
+        </select>
+      </div>
+    </div>
+
+    <button class="generate-btn" onclick="generateImage()">🎨 GENERATE ANIME IMAGE</button>
+  </div>
+
+  <div class="card result-area">
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <p>Creating your anime image...</p>
+    </div>
+    <img id="result-img" alt="Generated anime image">
+    <button class="download-btn" id="dl-btn" onclick="downloadImage()">⬇️ Download Image</button>
+    <div class="error-msg" id="error-msg">
+      ⚠️ Image could not be generated. Please try again or use a different prompt.
+    </div>
+  </div>
+</div>
+
+<footer>Created by Abhishek63AA • Powered by Pollinations AI • 100% Free & Unlimited 🎨</footer>
+
+<script>
+  let selectedStyle = '';
+  let currentImgUrl = '';
+
+  function selectStyle(btn, style) {
+    document.querySelectorAll('.style-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedStyle = style;
+  }
+
+  function setPrompt(text) {
+    document.getElementById('prompt').value = text;
+  }
+
+  function generateImage() {
+    const prompt = document.getElementById('prompt').value.trim();
+    if (!prompt) { alert('Please enter a prompt!'); return; }
+
+    const size = document.getElementById('size').value;
+    const quality = document.getElementById('quality').value;
+    const [w, h] = size.split('x');
+
+    let fullPrompt = prompt;
+    if (selectedStyle) fullPrompt += ', ' + selectedStyle;
+    if (quality) fullPrompt += ', ' + quality;
+    fullPrompt += ', anime style, detailed illustration';
+
+    const encodedPrompt = encodeURIComponent(fullPrompt);
+    const seed = Math.floor(Math.random() * 999999);
+    const url = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${w}&height=${h}&seed=${seed}&nologo=true`;
+
+    document.getElementById('loading').style.display = 'block';
+    document.getElementById('result-img').style.display = 'none';
+    document.getElementById('dl-btn').style.display = 'none';
+    document.getElementById('error-msg').style.display = 'none';
+    document.querySelector('.generate-btn').disabled = true;
+
+    currentImgUrl = url;
+    const img = document.getElementById('result-img');
+    img.src = url;
+    img.onload = () => {
+      document.getElementById('loading').style.display = 'none';
+      img.style.display = 'block';
+      document.getElementById('dl-btn').style.display = 'inline-block';
+      document.querySelector('.generate-btn').disabled = false;
+    };
+    img.onerror = () => {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('error-msg').style.display = 'block';
+      document.querySelector('.generate-btn').disabled = false;
+    };
+  }
+
+  function downloadImage() {
+    const a = document.createElement('a');
+    a.href = currentImgUrl;
+    a.download = 'anime-image.jpg';
+    a.target = '_blank';
+    a.click();
+  }
+</script>
+</body>
+</html>

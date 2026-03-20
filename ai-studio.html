@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Studio - Image & Video Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%); overflow-x: hidden; }
+        .glass-effect { background: rgba(255,255,255,0.07); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.15); }
+        .gradient-text { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .floating-animation { animation: float 6s ease-in-out infinite; }
+        @keyframes float { 0%,100%{transform:translateY(0px)} 50%{transform:translateY(-20px)} }
+        .pulse-glow { animation: pulse 2s cubic-bezier(0.4,0,0.6,1) infinite; }
+        @keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(102,126,234,0.7)} 50%{box-shadow:0 0 0 20px rgba(102,126,234,0)} }
+        .progress-fill { transition: width 0.3s ease; }
+        .tab-btn { border-bottom: 3px solid transparent; transition: all 0.3s; color: rgba(255,255,255,0.5); }
+        .tab-btn.active { border-bottom-color: #667eea; color: white; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        select option { background: #1a1a2e; color: white; }
+        .gallery-img { background: linear-gradient(135deg, #1a1a2e, #16213e); }
+        .hero-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.3; pointer-events: none; }
+        .star { position: absolute; background: white; border-radius: 50%; animation: twinkle 3s infinite; }
+        @keyframes twinkle { 0%,100%{opacity:0.2} 50%{opacity:1} }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); }
+        ::-webkit-scrollbar-thumb { background: #667eea; border-radius: 3px; }
+        .card-hover { transition: all 0.4s ease; }
+        .card-hover:hover { transform: translateY(-8px); box-shadow: 0 20px 60px rgba(102,126,234,0.3); }
+        .shine { position: relative; overflow: hidden; }
+        .shine::after { content:''; position:absolute; top:-50%; left:-60%; width:30%; height:200%; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.1),transparent); transform:skewX(-20deg); animation:shine 4s infinite; }
+        @keyframes shine { 0%{left:-60%} 100%{left:130%} }
+        #resultImg { width:100%; border-radius:16px; display:none; }
+        .typing { overflow: hidden; white-space: nowrap; animation: typing 3s steps(40,end) infinite alternate; }
+        @keyframes typing { from{width:0} to{width:100%} }
+    </style>
+</head>
+<body class="min-h-screen text-white">
+
+<!-- Particles -->
+<div id="particles" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;overflow:hidden;"></div>
+
+<!-- Navigation -->
+<nav class="fixed top-0 w-full z-50 glass-effect">
+    <div class="max-w-7xl mx-auto px-6 py-4">
+        <div class="flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-gradient-to-r from-purple-500 to-blue-500 rounded-xl flex items-center justify-center shine">
+                    <i class="fas fa-magic text-white text-lg"></i>
+                </div>
+                <span class="text-2xl font-bold gradient-text">AI Studio</span>
+            </div>
+            <div class="hidden md:flex items-center space-x-8">
+                <a href="#home" class="hover:text-blue-400 transition-all text-gray-300 hover:text-white">Home</a>
+                <a href="#generator" class="hover:text-blue-400 transition-all text-gray-300 hover:text-white">Generator</a>
+                <a href="#gallery" class="hover:text-blue-400 transition-all text-gray-300 hover:text-white">Gallery</a>
+                <a href="#pricing" class="hover:text-blue-400 transition-all text-gray-300 hover:text-white">Pricing</a>
+            </div>
+            <div class="flex items-center space-x-3">
+                <button onclick="toggleTheme()" class="p-2 rounded-lg hover:bg-white/10 transition-all text-gray-300" title="Toggle Theme">
+                    <i class="fas fa-moon" id="themeIcon"></i>
+                </button>
+                <button class="px-5 py-2 bg-gradient-to-r from-purple-500 to-blue-500 rounded-xl font-semibold hover:opacity-90 transition-all text-sm">
+                    Sign In
+                </button>
+                <!-- Mobile menu -->
+                <button class="md:hidden p-2 rounded-lg hover:bg-white/10" onclick="toggleMobileMenu()">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </div>
+        <!-- Mobile Menu -->
+        <div id="mobileMenu" class="hidden md:hidden mt-4 pb-4 border-t border-white/10 pt-4 space-y-3">
+            <a href="#home" class="block text-gray-300 hover:text-white" onclick="toggleMobileMenu()">Home</a>
+            <a href="#generator" class="block text-gray-300 hover:text-white" onclick="toggleMobileMenu()">Generator</a>
+            <a href="#gallery" class="block text-gray-300 hover:text-white" onclick="toggleMobileMenu()">Gallery</a>
+            <a href="#pricing" class="block text-gray-300 hover:text-white" onclick="toggleMobileMenu()">Pricing</a>
+        </div>
+    </div>
+</nav>
+
+<!-- Hero Section -->
+<section id="home" class="min-h-screen flex items-center justify-center pt-24 pb-16 px-6 relative z-10">
+    <div class="max-w-7xl mx-auto grid md:grid-cols-2 gap-12 items-center">
+        <div class="space-y-8">
+            <div class="inline-flex items-center space-x-2 glass-effect px-4 py-2 rounded-full text-sm text-blue-300">
+                <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                <span>AI-Powered Generation • 100% Free</span>
+            </div>
+            <h1 class="text-5xl md:text-6xl font-bold leading-tight">
+                Create <span class="gradient-text">Masterpiece</span><br>
+                Images & Videos<br>
+                <span class="text-3xl md:text-4xl text-blue-400">in Seconds ✨</span>
+            </h1>
+            <p class="text-lg text-gray-300 max-w-lg leading-relaxed">
+                Generate stunning, high-quality images from text prompts using cutting-edge AI technology. No sign-up needed. Completely free.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4">
+                <button onclick="document.getElementById('generator').scrollIntoView({behavior:'smooth'})"
+                    class="px-8 py-4 bg-gradient-to-r from-purple-500 to-blue-500 rounded-2xl font-semibold text-lg hover:opacity-90 transition-all pulse-glow shine">
+                    <i class="fas fa-wand-magic-sparkles mr-2"></i>Start Creating
+                </button>
+                <button onclick="document.getElementById('gallery').scrollIntoView({behavior:'smooth'})"
+                    class="px-8 py-4 glass-effect rounded-2xl font-semibold hover:bg-white/10 transition-all">
+                    <i class="fas fa-images mr-2"></i>View Gallery
+                </button>
+            </div>
+            <div class="flex items-center space-x-6 text-sm text-gray-400">
+                <div class="flex items-center space-x-2">
+                    <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                    <span>10,000+ creators</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <div class="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+                    <span>1M+ images created</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <div class="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div>
+                    <span>99.9% uptime</span>
+                </div>
+            </div>
+        </div>
+        <div class="relative">
+            <div class="floating-animation">
+                <div class="relative w-full rounded-3xl overflow-hidden glass-effect p-6">
+                    <div class="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-blue-500/10"></div>
+                    <div class="relative z-10">
+                        <div class="flex items-center space-x-2 mb-4">
+                            <div class="w-3 h-3 bg-red-500 rounded-full"></div>
+                            <div class="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                            <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                            <span class="text-xs text-gray-400 ml-2">AI Studio — Live Generation</span>
+                        </div>
+                        <div class="bg-black/30 rounded-2xl p-4 mb-4">
+                            <p class="text-xs text-gray-400 mb-1">Prompt:</p>
+                            <p class="text-sm text-blue-300 typing">"A majestic dragon over a cyberpunk city, 8K..."</p>
+                        </div>
+                        <div class="w-full h-48 md:h-64 bg-gradient-to-br from-purple-900/50 via-blue-900/50 to-indigo-900/50 rounded-2xl flex items-center justify-center border border-white/10">
+                            <div class="text-center">
+                                <div class="text-5xl mb-3">🎨</div>
+                                <p class="text-gray-300 text-sm font-medium">Your masterpiece appears here</p>
+                                <p class="text-gray-500 text-xs mt-1">Try the generator below ↓</p>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex justify-between items-center">
+                            <div class="flex space-x-2">
+                                <span class="px-2 py-1 bg-purple-500/20 text-purple-300 rounded text-xs">8K Quality</span>
+                                <span class="px-2 py-1 bg-blue-500/20 text-blue-300 rounded text-xs">AI Powered</span>
+                            </div>
+                            <span class="text-xs text-gray-500">Generated in 3.2s</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features -->
+<section class="py-20 px-6 relative z-10">
+    <div class="max-w-7xl mx-auto">
+        <div class="grid md:grid-cols-3 gap-8">
+            <div class="glass-effect rounded-2xl p-8 card-hover text-center">
+                <div class="w-16 h-16 bg-gradient-to-r from-purple-500 to-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-bolt text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-bold mb-3">Lightning Fast</h3>
+                <p class="text-gray-400">Generate images in under 10 seconds with our optimized AI pipeline</p>
+            </div>
+            <div class="glass-effect rounded-2xl p-8 card-hover text-center">
+                <div class="w-16 h-16 bg-gradient-to-r from-pink-500 to-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-palette text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-bold mb-3">Multiple Styles</h3>
+                <p class="text-gray-400">Choose from Anime, Realistic, Cyberpunk, Oil Painting and many more styles</p>
+            </div>
+            <div class="glass-effect rounded-2xl p-8 card-hover text-center">
+                <div class="w-16 h-16 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-download text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-bold mb-3">Free Download</h3>
+                <p class="text-gray-400">Download your creations in high quality, completely free, no watermarks</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Generator Section -->
+<section id="generator" class="py-20 px-6 relative z-10">
+    <div class="max-w-4xl mx-auto">
+        <div class="text-center mb-16">
+            <h2 class="text-4xl md:text-5xl font-bold gradient-text mb-4">AI Generator</h2>
+            <p class="text-lg text-gray-300">Transform your ideas into stunning visuals</p>
+        </div>
+
+        <div class="glass-effect rounded-3xl p-6 md:p-10">
+            <!-- Tabs -->
+            <div class="flex border-b border-white/20 mb-8">
+                <button class="flex-1 py-3 px-4 font-semibold text-center tab-btn active" data-tab="image" onclick="switchTab('image')">
+                    <i class="fas fa-image mr-2"></i>Image Generator
+                </button>
+                <button class="flex-1 py-3 px-4 font-semibold text-center tab-btn" data-tab="video" onclick="switchTab('video')">
+                    <i class="fas fa-video mr-2"></i>Video Generator
+                </button>
+            </div>
+
+            <!-- Image Tab -->
+            <div id="image-tab" class="tab-content active">
+                <!-- Quick prompts -->
+                <div class="mb-4">
+                    <p class="text-xs text-gray-400 mb-2 uppercase tracking-widest">Quick Prompts</p>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="setPrompt('A majestic dragon flying over a cyberpunk city at night, ultra detailed, 8K')" class="px-3 py-1 glass-effect rounded-full text-xs hover:bg-white/10 transition-all text-blue-300">🐉 Dragon City</button>
+                        <button onclick="setPrompt('Beautiful anime girl with glowing eyes in a magical forest, cinematic lighting')" class="px-3 py-1 glass-effect rounded-full text-xs hover:bg-white/10 transition-all text-pink-300">🌸 Anime Girl</button>
+                        <button onclick="setPrompt('Epic space battle with massive spaceships, nebula background, photorealistic')" class="px-3 py-1 glass-effect rounded-full text-xs hover:bg-white/10 transition-all text-purple-300">🚀 Space Battle</button>
+                        <button onclick="setPrompt('Majestic lion portrait in golden sunset, national geographic style, ultra HD')" class="px-3 py-1 glass-effect rounded-full text-xs hover:bg-white/10 transition-all text-yellow-300">🦁 Lion Portrait</button>
+                        <button onclick="setPrompt('Futuristic city skyline at dusk, neon lights reflecting on water, cinematic')" class="px-3 py-1 glass-effect rounded-full text-xs hover:bg-white/10 transition-all text-cyan-300">🌆 Neon City</button>
+                    </div>
+                </div>
+                <div class="mb-6">
+                    <textarea id="imagePrompt"
+                        placeholder="Describe your perfect image... e.g., 'A majestic dragon flying over a cyberpunk city at sunset, ultra-detailed, cinematic lighting, 8k'"
+                        class="w-full p-5 rounded-2xl bg-white/5 border border-white/20 focus:border-blue-500 focus:outline-none text-base resize-vertical min-h-[120px] placeholder-gray-500 text-white"
+                    ></textarea>
+                </div>
+                <div class="grid grid-cols-3 gap-4 mb-6">
+                    <div>
+                        <label class="block text-xs font-semibold mb-2 text-gray-400 uppercase tracking-widest">Style</label>
+                        <select id="styleSelect" class="w-full p-3 rounded-xl bg-white/5 border border-white/20 focus:border-blue-500 focus:outline-none text-white text-sm">
+                            <option value="">Default</option>
+                            <option value="anime style">Anime</option>
+                            <option value="cyberpunk style, neon lights">Cyberpunk</option>
+                            <option value="realistic, photographic">Realistic</option>
+                            <option value="oil painting style">Oil Painting</option>
+                            <option value="3D render, octane render">3D Render</option>
+                            <option value="watercolor painting">Watercolor</option>
+                            <option value="pencil sketch, detailed">Sketch</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold mb-2 text-gray-400 uppercase tracking-widest">Size</label>
+                        <select id="sizeSelect" class="w-full p-3 rounded-xl bg-white/5 border border-white/20 focus:border-blue-500 focus:outline-none text-white text-sm">
+                            <option value="512x512">512×512</option>
+                            <option value="768x768" selected>768×768</option>
+                            <option value="1024x1024">1024×1024</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold mb-2 text-gray-400 uppercase tracking-widest">Quality</label>
+                        <select id="qualitySelect" class="w-full p-3 rounded-xl bg-white/5 border border-white/20 focus:border-blue-500 focus:outline-none text-white text-sm">
+                            <option value="">Standard</option>
+                            <option value="high quality, detailed" selected>High Quality</option>
+                            <option value="masterpiece, 8k, ultra detailed, best quality">8K Masterpiece</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="generateImage()" id="genBtn"
+                        class="flex-1 bg-gradient-to-r from-purple-500 to-blue-500 hover:opacity-90 py-4 px-6 rounded-2xl font-bold text-base transition-all pulse-glow shine">
+                        <i class="fas fa-wand-magic-sparkles mr-2"></i>Generate Image
+                    </button>
+                    <button onclick="clearForm()" class="px-6 py-4 glass-effect rounded-2xl hover:bg-white/10 transition-all text-sm font-semibold">
+                        <i class="fas fa-rotate-left mr-1"></i>Clear
+                    </button>
+                </div>
+            </div>
+
+            <!-- Video Tab -->
+            <div id="video-tab" class="tab-content">
+                <div class="glass-effect rounded-2xl p-6 text-center mb-6">
+                    <div class="text-4xl mb-3">🎬</div>
+                    <h3 class="text-lg font-bold mb-2">Video Generation</h3>
+                    <p class="text-gray-400 text-sm">AI video generation creates an animated slideshow from your prompt using multiple AI images.</p>
+                </div>
+                <div class="mb-6">
+                    <textarea id="videoPrompt"
+                        placeholder="Describe your video scene... e.g., 'A futuristic cityscape with flying cars, smooth camera pan, cinematic, 4k'"
+                        class="w-full p-5 rounded-2xl bg-white/5 border border-white/20 focus:border-blue-500 focus:outline-none text-base resize-vertical min-h-[120px] placeholder-gray-500 text-white"
+                    ></textarea>
+                </div>
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <label class="block text-xs font-semibold mb-2 text-gray-400 uppercase tracking-widest">Frames</label>
+                        <select id="framesSelect" class="w-full p-3 rounded-xl bg-white/5 border border-white/20 focus:border-blue-500 focus:outline-none text-white text-sm">
+                            <option value="3">3 Frames (Fast)</option>
+                            <option value="5" selected>5 Frames</option>
+                            <option value="8">8 Frames (Slow)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold mb-2 text-gray-400 uppercase tracking-widest">Style</label>
+                        <select id="videoStyleSelect" class="w-full p-3 rounded-xl bg-white/5 border border-white/20 focus:border-blue-500 focus:outline-none text-white text-sm">
+                            <option value="cinematic">Cinematic</option>
+                            <option value="anime style">Anime</option>
+                            <option value="realistic">Realistic</option>
+                            <option value="cyberpunk">Cyberpunk</option>
+                        </select>
+                    </div>
+                </div>
+                <button onclick="generateVideo()" id="vidBtn"
+                    class="w-full bg-gradient-to-r from-pink-500 to-purple-500 hover:opacity-90 py-4 px-6 rounded-2xl font-bold text-base transition-all shine">
+                    <i class="fas fa-film mr-2"></i>Generate Video Slideshow
+                </button>
+            </div>
+
+            <!-- Progress Bar -->
+            <div id="progressContainer" class="hidden mt-8">
+                <div class="flex items-center space-x-3 mb-3">
+                    <div class="w-8 h-8 bg-blue-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-spinner fa-spin text-white text-sm"></i>
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex justify-between text-sm mb-2">
+                            <span id="progressMsg" class="text-gray-300">Generating your masterpiece...</span>
+                            <span id="progressText" class="text-blue-400 font-bold">0%</span>
+                        </div>
+                        <div class="w-full bg-white/10 rounded-full h-2.5 overflow-hidden">
+                            <div id="progressBar" class="bg-gradient-to-r from-blue-500 to-purple-500 h-2.5 rounded-full progress-fill" style="width:0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Result Preview -->
+            <div id="resultPreview" class="hidden mt-8">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold">✨ Your Masterpiece</h3>
+                    <div class="flex gap-2">
+                        <button id="downloadBtn" onclick="downloadResult()" class="p-2.5 glass-effect rounded-xl hover:bg-white/10 transition-all text-green-400" title="Download">
+                            <i class="fas fa-download"></i>
+                        </button>
+                        <button onclick="shareResult()" class="p-2.5 glass-effect rounded-xl hover:bg-white/10 transition-all text-blue-400" title="Share">
+                            <i class="fas fa-share-alt"></i>
+                        </button>
+                        <button onclick="addToGallery()" class="p-2.5 glass-effect rounded-xl hover:bg-white/10 transition-all text-yellow-400" title="Save to Gallery">
+                            <i class="fas fa-star"></i>
+                        </button>
+                    </div>
+                </div>
+                <div id="resultContent" class="rounded-2xl overflow-hidden border border-white/10">
+                    <img id="resultImg" src="" alt="Generated" class="w-full rounded-2xl" style="display:none">
+                    <div id="videoResult" style="display:none"></div>
+                    <div id="resultPlaceholder" class="w-full h-64 bg-gradient-to-br from-gray-800 to-gray-700 flex items-center justify-center rounded-2xl">
+                        <div class="text-center text-gray-500">
+                            <i class="fas fa-image text-5xl mb-3"></i>
+                            <p>Your result will appear here</p>
+                        </div>
+                    </div>
+                </div>
+                <p id="resultPromptLabel" class="text-xs text-gray-500 mt-2 italic"></p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Gallery Section -->
+<section id="gallery" class="py-20 px-6 relative z-10">
+    <div class="max-w-7xl mx-auto">
+        <div class="text-center mb-14">
+            <h2 class="text-4xl md:text-5xl font-bold gradient-text mb-4">Community Gallery</h2>
+            <p class="text-lg text-gray-300">Discover incredible creations made with AI Studio</p>
+        </div>
+        <div id="galleryGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <!-- Gallery items filled by JS -->
+        </div>
+    </div>
+</section>
+
+<!-- Pricing Section -->
+<section id="pricing" class="py-20 px-6 relative z-10">
+    <div class="max-w-5xl mx-auto">
+        <div class="text-center mb-14">
+            <h2 class="text-4xl md:text-5xl font-bold gradient-text mb-4">Simple Pricing</h2>
+            <p class="text-lg text-gray-300">Start free, upgrade when you need more</p>
+        </div>
+        <div class="grid md:grid-cols-3 gap-8">
+            <div class="glass-effect rounded-2xl p-8 card-hover">
+                <h3 class="text-xl font-bold mb-2">Free</h3>
+                <div class="text-4xl font-black mb-6">$0<span class="text-lg text-gray-400">/mo</span></div>
+                <ul class="space-y-3 mb-8 text-gray-300 text-sm">
+                    <li><i class="fas fa-check text-green-400 mr-2"></i>10 images/day</li>
+                    <li><i class="fas fa-check text-green-400 mr-2"></i>512x512 resolution</li>
+                    <li><i class="fas fa-check text-green-400 mr-2"></i>Basic styles</li>
+                    <li><i class="fas fa-times text-red-400 mr-2"></i>No watermark removal</li>
+                </ul>
+                <button class="w-full py-3 glass-effect rounded-xl font-semibold hover:bg-white/10 transition-all">Get Started</button>
+            </div>
+            <div class="relative glass-effect rounded-2xl p-8 card-hover border-2 border-purple-500">
+                <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full text-xs font-bold">POPULAR</div>
+                <h3 class="text-xl font-bold mb-2">Pro</h3>
+                <div class="text-4xl font-black mb-6">$9<span class="text-lg text-gray-400">/mo</span></div>
+                <ul class="space-y-3 mb-8 text-gray-300 text-sm">
+                    <li><i class="fas fa-check text-green-400 mr-2"></i>Unlimited images</li>
+                    <li><i class="fas fa-check text-green-400 mr-2"></i>1024x1024 resolution</li>
+                    <li><i class="fas fa-check text-green-400 mr-2"></i>All styles</li>
+                    <li><i class="fas fa-check text-green-400 mr-2"></i>No watermarks</li>
+                </ul>
+                <button class="w-full py-3 bg-gradient-to-r from-purple-500 to-blue-500 rounded-xl font-semibold hover:opacity-90 transition-all pulse-glow">Get Pro</button>
+            </div>
+            <div class="glass-effect rounded-2xl p-8 card-hover">
+                <h3 class="text-xl font-bold mb-2">Enterprise</h3>
+                <div class="text-4xl font-black mb-6">$29<span class="text-lg text-gray-400">/mo</span></div>
+                <ul class="space-y-3 mb-8 text-gray-300 text-sm">
+                    <li><i class="fas fa-check text-green-400 mr-2"></i>Unlimited everything</li>
+                    <li><i class="fas fa-check text-green-400 mr-2"></i>8K resolution</li>
+                    <li><i class="fas fa-check text-green-400 mr-2"></i>API access</li>
+                    <li><i class="fas fa-check text-green-400 mr-2"></i>Priority support</li>
+                </ul>
+                <button class="w-full py-3 glass-effect rounded-xl font-semibold hover:bg-white/10 transition-all">Contact Us</button>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer class="py-14 px-6 border-t border-white/10 relative z-10">
+    <div class="max-w-7xl mx-auto">
+        <div class="grid md:grid-cols-4 gap-10 mb-10">
+            <div>
+                <div class="flex items-center space-x-3 mb-4">
+                    <div class="w-10 h-10 bg-gradient-to-r from-purple-500 to-blue-500 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-magic text-white"></i>
+                    </div>
+                    <span class="text-xl font-bold gradient-text">AI Studio</span>
+                </div>
+                <p class="text-gray-400 text-sm leading-relaxed">Create stunning AI-generated images and videos from text prompts.</p>
+            </div>
+            <div>
+                <h4 class="font-semibold mb-4 text-white">Product</h4>
+                <ul class="space-y-2 text-gray-400 text-sm">
+                    <li><a href="#generator" class="hover:text-white transition-all">Image Generator</a></li>
+                    <li><a href="#generator" class="hover:text-white transition-all">Video Generator</a></li>
+                    <li><a href="#gallery" class="hover:text-white transition-all">Gallery</a></li>
+                    <li><a href="#pricing" class="hover:text-white transition-all">Pricing</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-semibold mb-4 text-white">Company</h4>
+                <ul class="space-y-2 text-gray-400 text-sm">
+                    <li><a href="#" class="hover:text-white transition-all">About</a></li>
+                    <li><a href="#" class="hover:text-white transition-all">Blog</a></li>
+                    <li><a href="#" class="hover:text-white transition-all">Careers</a></li>
+                    <li><a href="#" class="hover:text-white transition-all">Contact</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-semibold mb-4 text-white">Connect</h4>
+                <div class="flex space-x-3">
+                    <a href="#" class="w-9 h-9 glass-effect rounded-xl flex items-center justify-center hover:bg-white/10 transition-all text-gray-400 hover:text-white">
+                        <i class="fab fa-twitter text-sm"></i>
+                    </a>
+                    <a href="#" class="w-9 h-9 glass-effect rounded-xl flex items-center justify-center hover:bg-white/10 transition-all text-gray-400 hover:text-white">
+                        <i class="fab fa-instagram text-sm"></i>
+                    </a>
+                    <a href="#" class="w-9 h-9 glass-effect rounded-xl flex items-center justify-center hover:bg-white/10 transition-all text-gray-400 hover:text-white">
+                        <i class="fab fa-discord text-sm"></i>
+                    </a>
+                    <a href="#" class="w-9 h-9 glass-effect rounded-xl flex items-center justify-center hover:bg-white/10 transition-all text-gray-400 hover:text-white">
+                        <i class="fab fa-github text-sm"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-gray-500">
+            <p>© 2026 AI Studio. All rights reserved.</p>
+            <div class="flex space-x-6 mt-4 md:mt-0">
+                <a href="#" class="hover:text-white transition-all">Privacy Policy</a>
+                <a href="#" class="hover:text-white transition-all">Terms of Service</a>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- Toast Notification -->
+<div id="toast" class="fixed bottom-6 right-6 z-50 hidden">
+    <div class="glass-effect px-5 py-3 rounded-xl text-sm font-medium flex items-center space-x-2">
+        <i id="toastIcon" class="fas fa-check-circle text-green-400"></i>
+        <span id="toastMsg">Done!</span>
+    </div>
+</div>
+
+<script>
+// Particles
+function createParticles() {
+    const container = document.getElementById('particles');
+    for (let i = 0; i < 60; i++) {
+        const star = document.createElement('div');
+        star.className = 'star';
+        star.style.cssText = `
+            width:${Math.random()*3+1}px;
+            height:${Math.random()*3+1}px;
+            top:${Math.random()*100}%;
+            left:${Math.random()*100}%;
+            animation-delay:${Math.random()*3}s;
+            animation-duration:${2+Math.random()*3}s;
+        `;
+        container.appendChild(star);
+    }
+}
+createParticles();
+
+// Gallery data
+const galleryItems = [
+    {prompt:'Cyberpunk city at night', likes:'2.4k', emoji:'🌆', colors:['#1a0033','#330066','#660099']},
+    {prompt:'Mountain sunset landscape', likes:'1.8k', emoji:'🏔️', colors:['#1a0000','#4d1a00','#994d00']},
+    {prompt:'Anime warrior princess', likes:'3.1k', emoji:'⚔️', colors:['#001a33','#003366','#0066cc']},
+    {prompt:'Magical forest spirits', likes:'1.2k', emoji:'🌿', colors:['#001a00','#003300','#006600']},
+    {prompt:'Space station interior', likes:'2.7k', emoji:'🚀', colors:['#000033','#000066','#0000cc']},
+    {prompt:'Dragon over volcano', likes:'4.2k', emoji:'🐉', colors:['#1a0000','#660000','#cc0000']},
+    {prompt:'Ocean at golden hour', likes:'1.5k', emoji:'🌊', colors:['#001433','#004d66','#0099cc']},
+    {prompt:'Futuristic architecture', likes:'2.0k', emoji:'🏙️', colors:['#0d0d1a','#1a1a33','#3333ff']},
+];
+
+function buildGallery() {
+    const grid = document.getElementById('galleryGrid');
+    galleryItems.forEach(item => {
+        const el = document.createElement('div');
+        el.className = 'group relative overflow-hidden rounded-2xl glass-effect card-hover cursor-pointer';
+        el.innerHTML = `
+            <div class="w-full h-48 md:h-56 flex items-center justify-center text-6xl"
+                style="background:linear-gradient(135deg,${item.colors[0]},${item.colors[1]},${item.colors[2]})">
+                ${item.emoji}
+            </div>
+            <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-all flex items-end p-4">
+                <div>
+                    <p class="font-semibold text-sm mb-1">${item.prompt}</p>
+                    <div class="flex items-center text-xs text-gray-300">
+                        <i class="fas fa-heart mr-1 text-red-400"></i><span>${item.likes}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+        grid.appendChild(el);
+    });
+}
+buildGallery();
+
+// Tab switching
+function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+    document.getElementById(`${tab}-tab`).classList.add('active');
+    document.getElementById('resultPreview').classList.add('hidden');
+    document.getElementById('progressContainer').classList.add('hidden');
+}
+
+function setPrompt(text) {
+    document.getElementById('imagePrompt').value = text;
+    document.getElementById('imagePrompt').focus();
+}
+
+function clearForm() {
+    document.getElementById('imagePrompt').value = '';
+    document.getElementById('resultPreview').classList.add('hidden');
+    document.getElementById('progressContainer').classList.add('hidden');
+}
+
+// Progress animation
+function animateProgress(duration, msgs, callback) {
+    const bar = document.getElementById('progressBar');
+    const text = document.getElementById('progressText');
+    const msg = document.getElementById('progressMsg');
+    document.getElementById('progressContainer').classList.remove('hidden');
+    let start = null;
+    let msgIdx = 0;
+    function step(ts) {
+        if (!start) start = ts;
+        const elapsed = ts - start;
+        const pct = Math.min(100, (elapsed / duration) * 100);
+        bar.style.width = pct + '%';
+        text.textContent = Math.round(pct) + '%';
+        const mi = Math.floor((pct / 100) * msgs.length);
+        if (mi !== msgIdx && mi < msgs.length) { msgIdx = mi; msg.textContent = msgs[mi]; }
+        if (pct < 100) requestAnimationFrame(step);
+        else { setTimeout(callback, 200); }
+    }
+    requestAnimationFrame(step);
+}
+
+// Generate Image
+function generateImage() {
+    const prompt = document.getElementById('imagePrompt').value.trim();
+    if (!prompt) { showToast('Please enter a prompt!', 'warning'); return; }
+    const style = document.getElementById('styleSelect').value;
+    const size = document.getElementById('sizeSelect').value;
+    const quality = document.getElementById('qualitySelect').value;
+    const [w, h] = size.split('x');
+    let fullPrompt = prompt;
+    if (style) fullPrompt += ', ' + style;
+    if (quality) fullPrompt += ', ' + quality;
+
+    document.getElementById('genBtn').disabled = true;
+    document.getElementById('resultPreview').classList.add('hidden');
+
+    const msgs = ['Initializing AI model...','Processing your prompt...','Generating pixels...','Adding details...','Final rendering...','Almost done!'];
+    const seed = Math.floor(Math.random() * 999999);
+    const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(fullPrompt)}?width=${w}&height=${h}&seed=${seed}&model=flux&nologo=true`;
+
+    animateProgress(6000, msgs, () => {
+        document.getElementById('progressContainer').classList.add('hidden');
+        document.getElementById('genBtn').disabled = false;
+        const img = document.getElementById('resultImg');
+        const placeholder = document.getElementById('resultPlaceholder');
+        const videoResult = document.getElementById('videoResult');
+        videoResult.style.display = 'none';
+        placeholder.style.display = 'flex';
+        img.style.display = 'none';
+        document.getElementById('resultPreview').classList.remove('hidden');
+        document.getElementById('resultPromptLabel').textContent = '"' + prompt + '"';
+        img.src = url;
+        img.onload = () => { img.style.display = 'block'; placeholder.style.display = 'none'; showToast('Image generated! ✨', 'success'); };
+        img.onerror = () => { placeholder.innerHTML = '<div class="text-center text-red-400"><i class="fas fa-exclamation-circle text-4xl mb-3"></i><p>Generation failed. Try again!</p></div>'; showToast('Failed. Try a different prompt.', 'error'); };
+    });
+}
+
+// Generate Video (slideshow)
+function generateVideo() {
+    const prompt = document.getElementById('videoPrompt').value.trim();
+    if (!prompt) { showToast('Please enter a prompt!', 'warning'); return; }
+    const frames = parseInt(document.getElementById('framesSelect').value);
+    const vStyle = document.getElementById('videoStyleSelect').value;
+    document.getElementById('vidBtn').disabled = true;
+    document.getElementById('resultPreview').classList.add('hidden');
+
+    const msgs = ['Preparing video frames...','Generating scene 1...','Generating scene 2...','Composing animation...','Finalizing video...'];
+    animateProgress(frames * 3000, msgs, async () => {
+        document.getElementById('progressContainer').classList.add('hidden');
+        document.getElementById('vidBtn').disabled = false;
+        document.getElementById('resultPreview').classList.remove('hidden');
+        document.getElementById('resultImg').style.display = 'none';
+        document.getElementById('resultPlaceholder').style.display = 'none';
+
+        const videoDiv = document.getElementById('videoResult');
+        videoDiv.style.display = 'block';
+        videoDiv.innerHTML = '<div class="text-center p-8 text-gray-400"><i class="fas fa-spinner fa-spin text-3xl mb-3"></i><p>Loading frames...</p></div>';
+
+        // Build slideshow
+        const imgs = [];
+        for (let i = 0; i < frames; i++) {
+            const seed = Math.floor(Math.random() * 999999) + i * 1000;
+            const fp = encodeURIComponent(`${prompt}, ${vStyle}, scene ${i+1} of ${frames}, cinematic`);
+            imgs.push(`https://image.pollinations.ai/prompt/${fp}?width=768&height=432&seed=${seed}&model=flux&nologo=true`);
+        }
+
+        videoDiv.innerHTML = `
+            <div class="relative rounded-2xl overflow-hidden bg-black" style="aspect-ratio:16/9">
+                <img id="slideImg" src="${imgs[0]}" class="w-full h-full object-cover" />
+                <div class="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2" id="slideDots"></div>
+                <div class="absolute top-3 right-3 bg-black/60 px-2 py-1 rounded text-xs">
+                    <span id="slideNum">1</span>/${frames}
+                </div>
+                <button onclick="prevSlide()" class="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/50 rounded-full flex items-center justify-center hover:bg-black/80 transition-all">‹</button>
+                <button onclick="nextSlide()" class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/50 rounded-full flex items-center justify-center hover:bg-black/80 transition-all">›</button>
+            </div>
+        `;
+        window._slideImgs = imgs;
+        window._slideCur = 0;
+        const dots = document.getElementById('slideDots');
+        imgs.forEach((_,i) => {
+            const d = document.createElement('div');
+            d.className = `w-2 h-2 rounded-full transition-all ${i===0?'bg-white':'bg-white/40'}`;
+            d.onclick = () => goSlide(i);
+            dots.appendChild(d);
+        });
+        // Auto play
+        window._slideInterval = setInterval(() => nextSlide(), 2500);
+        showToast('Video slideshow ready! ▶', 'success');
+        document.getElementById('resultPromptLabel').textContent = '"' + prompt + '"';
+    });
+}
+
+window.nextSlide = function() {
+    const imgs = window._slideImgs;
+    window._slideCur = (window._slideCur + 1) % imgs.length;
+    goSlide(window._slideCur);
+};
+window.prevSlide = function() {
+    const imgs = window._slideImgs;
+    window._slideCur = (window._slideCur - 1 + imgs.length) % imgs.length;
+    goSlide(window._slideCur);
+};
+window.goSlide = function(i) {
+    window._slideCur = i;
+    document.getElementById('slideImg').src = window._slideImgs[i];
+    document.getElementById('slideNum').textContent = i + 1;
+    document.querySelectorAll('#slideDots div').forEach((d,j) => {
+        d.className = `w-2 h-2 rounded-full transition-all ${j===i?'bg-white':'bg-white/40'}`;
+    });
+};
+
+// Download
+function downloadResult() {
+    const img = document.getElementById('resultImg');
+    if (img.style.display !== 'none' && img.src) {
+        const a = document.createElement('a');
+        a.href = img.src; a.download = 'ai-studio-image.jpg'; a.target = '_blank';
+        a.click();
+        showToast('Downloading...', 'success');
+    } else {
+        showToast('Generate an image first!', 'warning');
+    }
+}
+
+function shareResult() {
+    if (navigator.share) {
+        navigator.share({title:'AI Studio Creation', text:'Check out my AI generated image!', url: window.location.href});
+    } else {
+        navigator.clipboard.writeText(window.location.href);
+        showToast('Link copied!', 'success');
+    }
+}
+
+function addToGallery() {
+    showToast('Saved to gallery! ⭐', 'success');
+}
+
+// Theme toggle
+let isDark = true;
+function toggleTheme() {
+    isDark = !isDark;
+    document.getElementById('themeIcon').className = isDark ? 'fas fa-moon' : 'fas fa-sun';
+    document.body.style.filter = isDark ? '' : 'invert(1) hue-rotate(180deg)';
+}
+
+// Mobile menu
+function toggleMobileMenu() {
+    document.getElementById('mobileMenu').classList.toggle('hidden');
+}
+
+// Toast
+function showToast(msg, type='success') {
+    const toast = document.getElementById('toast');
+    const icon = document.getElementById('toastIcon');
+    const msgEl = document.getElementById('toastMsg');
+    const icons = {success:'fa-check-circle text-green-400',warning:'fa-exclamation-circle text-yellow-400',error:'fa-times-circle text-red-400'};
+    icon.className = 'fas ' + (icons[type]||icons.success);
+    msgEl.textContent = msg;
+    toast.classList.remove('hidden');
+    clearTimeout(toast._t);
+    toast._t = setTimeout(() => toast.classList.add('hidden'), 3000);
+}
+</script>
+</body>
+</html>

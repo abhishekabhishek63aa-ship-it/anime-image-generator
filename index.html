@@ -4,244 +4,254 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Anime Image Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-    min-height: 100vh;
-    font-family: 'Segoe UI', sans-serif;
-    color: white;
-  }
-  .header {
-    text-align: center;
-    padding: 30px 20px 10px;
-  }
-  .header h1 {
-    font-size: 2rem;
-    background: linear-gradient(90deg, #ff6ec7, #a78bfa, #60a5fa);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    margin-bottom: 5px;
-  }
-  .header p { color: #a0aec0; font-size: 0.9rem; }
-  .container { max-width: 700px; margin: 0 auto; padding: 20px; }
-  .card {
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 16px;
-    padding: 20px;
-    margin-bottom: 20px;
-  }
-  label { display: block; margin-bottom: 8px; font-size: 0.85rem; color: #a78bfa; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
-  textarea {
-    width: 100%; padding: 14px; border-radius: 10px;
-    background: rgba(255,255,255,0.08); border: 1px solid rgba(167,139,250,0.3);
-    color: white; font-size: 1rem; resize: vertical; min-height: 100px;
-    outline: none; transition: border 0.3s;
-  }
-  textarea:focus { border-color: #a78bfa; }
-  .styles-grid {
-    display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 5px;
-  }
-  .style-btn {
-    padding: 10px 5px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.15);
-    background: rgba(255,255,255,0.05); color: white; cursor: pointer;
-    font-size: 0.8rem; text-align: center; transition: all 0.2s;
-  }
-  .style-btn:hover, .style-btn.active {
-    background: rgba(167,139,250,0.3); border-color: #a78bfa;
-  }
-  .options-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 5px; }
-  select {
-    width: 100%; padding: 12px; border-radius: 10px;
-    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
-    color: white; font-size: 0.95rem; outline: none; cursor: pointer;
-  }
-  select option { background: #302b63; }
-  .generate-btn {
-    width: 100%; padding: 16px; border-radius: 12px; border: none;
-    background: linear-gradient(135deg, #a78bfa, #60a5fa);
-    color: white; font-size: 1.1rem; font-weight: 700;
-    cursor: pointer; letter-spacing: 1px; transition: all 0.3s;
-    margin-top: 10px;
-  }
-  .generate-btn:hover { transform: translateY(-2px); opacity: 0.9; }
-  .generate-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-  .result-area { text-align: center; }
-  .result-area img {
-    max-width: 100%; border-radius: 14px;
-    border: 2px solid rgba(167,139,250,0.4); display: none;
-  }
-  .loading {
-    display: none; padding: 40px;
-    font-size: 1rem; color: #a78bfa;
-  }
-  .spinner {
-    width: 50px; height: 50px; border: 4px solid rgba(167,139,250,0.2);
-    border-top-color: #a78bfa; border-radius: 50%;
-    animation: spin 0.8s linear infinite; margin: 0 auto 15px;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .download-btn {
-    display: none; margin: 15px auto 0; padding: 12px 30px;
-    border-radius: 10px; border: none;
-    background: linear-gradient(135deg, #10b981, #059669);
-    color: white; font-size: 1rem; font-weight: 600;
-    cursor: pointer; transition: all 0.3s;
-  }
-  .download-btn:hover { transform: translateY(-2px); opacity: 0.9; }
-  .error-msg {
-    display: none; color: #fc8181; background: rgba(252,129,129,0.1);
-    border: 1px solid rgba(252,129,129,0.3); border-radius: 10px;
-    padding: 15px; margin-top: 15px; font-size: 0.9rem;
-  }
-  .quick-prompts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
-  .qp-btn {
-    padding: 6px 14px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.2);
-    background: rgba(255,255,255,0.07); color: #e2e8f0;
-    cursor: pointer; font-size: 0.8rem; transition: all 0.2s;
-  }
-  .qp-btn:hover { background: rgba(167,139,250,0.25); border-color: #a78bfa; }
-  footer { text-align: center; padding: 20px; color: #4a5568; font-size: 0.8rem; }
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:linear-gradient(135deg,#0d001a,#1a0033,#000d1a);min-height:100vh;font-family:'Rajdhani',sans-serif;color:white;}
+.header{text-align:center;padding:30px 20px 15px;}
+.header h1{font-family:'Orbitron',monospace;font-size:clamp(1.4rem,5vw,2.2rem);font-weight:900;background:linear-gradient(135deg,#ff6ec7,#a78bfa,#60a5fa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:5px;}
+.header p{color:rgba(255,255,255,0.5);font-size:0.85rem;letter-spacing:2px;}
+.container{max-width:650px;margin:0 auto;padding:15px;}
+.card{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:18px;margin-bottom:15px;}
+.label{display:block;font-size:0.7rem;color:#a78bfa;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;}
+.styles-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.style-btn{padding:8px 4px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.8);cursor:pointer;font-size:0.72rem;text-align:center;font-family:'Rajdhani',sans-serif;transition:all 0.2s;}
+.style-btn.active,.style-btn:hover{background:rgba(167,139,250,0.25);border-color:#a78bfa;color:white;}
+.quick-prompts{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px;}
+.qp{padding:5px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.75);cursor:pointer;font-size:0.75rem;font-family:'Rajdhani',sans-serif;transition:all 0.2s;}
+.qp:hover{background:rgba(167,139,250,0.2);border-color:#a78bfa;color:white;}
+textarea{width:100%;padding:12px;border-radius:10px;background:rgba(255,255,255,0.07);border:1px solid rgba(167,139,250,0.25);color:white;font-size:0.95rem;resize:vertical;min-height:90px;outline:none;font-family:'Rajdhani',sans-serif;}
+textarea::placeholder{color:rgba(255,255,255,0.3);}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;}
+select{width:100%;padding:10px;border-radius:10px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:white;font-size:0.9rem;outline:none;font-family:'Rajdhani',sans-serif;}
+select option{background:#1a0033;}
+.gen-btn{width:100%;padding:15px;border-radius:12px;border:none;background:linear-gradient(135deg,#a78bfa,#60a5fa);color:white;font-family:'Orbitron',monospace;font-size:0.85rem;font-weight:700;letter-spacing:2px;cursor:pointer;margin-top:12px;transition:all 0.3s;}
+.gen-btn:hover{opacity:0.9;transform:translateY(-1px);}
+.gen-btn:disabled{opacity:0.5;cursor:not-allowed;transform:none;}
+.result-card{text-align:center;}
+.loading{display:none;padding:30px;}
+.spinner{width:45px;height:45px;border:4px solid rgba(167,139,250,0.2);border-top-color:#a78bfa;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 12px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading p{color:#a78bfa;font-size:0.9rem;letter-spacing:1px;}
+.loading .sub{color:rgba(255,255,255,0.3);font-size:0.75rem;margin-top:4px;}
+#resultImg{display:none;width:100%;border-radius:14px;border:2px solid rgba(167,139,250,0.3);}
+.dl-btn{display:none;margin:12px auto 0;padding:10px 28px;border-radius:10px;border:none;background:linear-gradient(135deg,#10b981,#059669);color:white;font-size:0.9rem;font-weight:700;cursor:pointer;font-family:'Rajdhani',sans-serif;letter-spacing:1px;}
+.error{display:none;color:#fc8181;background:rgba(252,129,129,0.08);border:1px solid rgba(252,129,129,0.25);border-radius:10px;padding:14px;margin-top:12px;font-size:0.85rem;text-align:center;}
+.retry-btn{margin-top:10px;padding:8px 20px;border-radius:8px;border:1px solid rgba(252,129,129,0.4);background:transparent;color:#fc8181;cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:0.85rem;}
+footer{text-align:center;padding:20px;color:rgba(255,255,255,0.2);font-size:0.75rem;}
+.img-info{font-size:0.72rem;color:rgba(255,255,255,0.3);margin-top:8px;font-style:italic;}
+.progress-wrap{margin-top:12px;}
+.prog-bar{height:4px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden;margin-bottom:6px;}
+.prog-fill{height:100%;background:linear-gradient(90deg,#a78bfa,#60a5fa);border-radius:2px;width:0%;transition:width 0.4s;}
+.prog-text{font-size:0.7rem;color:rgba(255,255,255,0.4);text-align:center;letter-spacing:1px;}
 </style>
 </head>
 <body>
-
 <div class="header">
-  <h1>✨ Anime Image Generator</h1>
-  <p>Free & Unlimited • Powered by Pollinations AI</p>
+  <h1>✨ ANIME IMAGE GENERATOR</h1>
+  <p>FREE & UNLIMITED • AI POWERED</p>
 </div>
-
 <div class="container">
   <div class="card">
-    <label>🎨 Anime Style</label>
+    <span class="label">🎨 Anime Style</span>
     <div class="styles-grid">
-      <button class="style-btn active" onclick="selectStyle(this,'')">🌸 Default</button>
-      <button class="style-btn" onclick="selectStyle(this,'naruto ninja style')">🍃 Naruto</button>
-      <button class="style-btn" onclick="selectStyle(this,'demon slayer kimetsu style')">⚔️ Demon Slayer</button>
-      <button class="style-btn" onclick="selectStyle(this,'dragon ball saiyan style')">🔥 Dragon Ball</button>
-      <button class="style-btn" onclick="selectStyle(this,'one piece pirate style')">☠️ One Piece</button>
-      <button class="style-btn" onclick="selectStyle(this,'cyberpunk neon anime style')">🤖 Cyberpunk</button>
-      <button class="style-btn" onclick="selectStyle(this,'chibi kawaii cute style')">🎀 Chibi</button>
-      <button class="style-btn" onclick="selectStyle(this,'dark gothic fantasy anime')">🌑 Dark Gothic</button>
-      <button class="style-btn" onclick="selectStyle(this,'isekai fantasy magical')">🧙 Isekai</button>
+      <button class="style-btn active" onclick="setStyle(this,'')">🌸 Default</button>
+      <button class="style-btn" onclick="setStyle(this,'naruto ninja anime style')">🍃 Naruto</button>
+      <button class="style-btn" onclick="setStyle(this,'demon slayer kimetsu no yaiba anime style')">⚔️ Demon Slayer</button>
+      <button class="style-btn" onclick="setStyle(this,'dragon ball z super saiyan anime style')">🔥 Dragon Ball</button>
+      <button class="style-btn" onclick="setStyle(this,'one piece pirate anime style')">☠️ One Piece</button>
+      <button class="style-btn" onclick="setStyle(this,'cyberpunk neon anime art style')">🤖 Cyberpunk</button>
+      <button class="style-btn" onclick="setStyle(this,'chibi kawaii cute anime style')">🎀 Chibi</button>
+      <button class="style-btn" onclick="setStyle(this,'dark gothic fantasy anime')">🌑 Dark Gothic</button>
+      <button class="style-btn" onclick="setStyle(this,'romance dreamy shojo anime style')">🌸 Romance</button>
     </div>
   </div>
 
   <div class="card">
-    <label>⚡ Quick Prompts</label>
+    <span class="label">⚡ Quick Prompts</span>
     <div class="quick-prompts">
-      <button class="qp-btn" onclick="setPrompt('anime girl with glowing eyes')">🌸 Anime Girl</button>
-      <button class="qp-btn" onclick="setPrompt('powerful warrior with sword')">⚔️ Warrior</button>
-      <button class="qp-btn" onclick="setPrompt('dragon in the sky')">🐉 Dragon</button>
-      <button class="qp-btn" onclick="setPrompt('magic witch casting spell')">🧙 Witch</button>
-      <button class="qp-btn" onclick="setPrompt('epic hero with armor')">🦸 Hero</button>
-      <button class="qp-btn" onclick="setPrompt('beautiful anime landscape sunset')">🌅 Landscape</button>
+      <button class="qp" onclick="setPrompt('anime girl with long silver hair and glowing blue eyes')">🌸 Anime Girl</button>
+      <button class="qp" onclick="setPrompt('powerful warrior with katana sword in battle')">⚔️ Warrior</button>
+      <button class="qp" onclick="setPrompt('Hinata Hyuga with byakugan eyes, beautiful portrait')">💜 Hinata</button>
+      <button class="qp" onclick="setPrompt('fire breathing dragon in stormy sky')">🐉 Dragon</button>
+      <button class="qp" onclick="setPrompt('Sharingan eye close up, red glowing')">👁️ Sharingan</button>
+      <button class="qp" onclick="setPrompt('anime witch with magic staff and stars')">🧙 Witch</button>
+      <button class="qp" onclick="setPrompt('epic hero with golden armor and wings')">⭐ Hero</button>
+      <button class="qp" onclick="setPrompt('beautiful anime landscape with sakura trees and mountains')">🌄 Landscape</button>
     </div>
   </div>
 
   <div class="card">
-    <label>✏️ Your Prompt</label>
-    <textarea id="prompt" placeholder="Describe your anime image... (e.g. anime girl with blue eyes and katana)"></textarea>
-
-    <div class="options-row" style="margin-top:15px;">
+    <span class="label">✏️ Your Prompt</span>
+    <textarea id="prompt" placeholder="Describe your anime image in English... (e.g. anime girl with blue eyes, cherry blossom background)"></textarea>
+    <div class="row2">
       <div>
-        <label>📐 Size</label>
+        <span class="label" style="margin-top:10px">📐 Size</span>
         <select id="size">
-          <option value="512x512">512×512</option>
+          <option value="512x512">512×512 (Fast)</option>
           <option value="768x768" selected>768×768 HD</option>
           <option value="1024x1024">1024×1024 Full HD</option>
-          <option value="1024x768">1024×768 Wide</option>
         </select>
       </div>
       <div>
-        <label>✨ Quality</label>
-        <select id="quality">
-          <option value="">Standard</option>
-          <option value="high quality" selected>High Quality</option>
-          <option value="masterpiece 8k ultra detailed">8K Masterpiece</option>
+        <span class="label" style="margin-top:10px">🤖 Model</span>
+        <select id="model">
+          <option value="flux" selected>Flux (Best)</option>
+          <option value="turbo">Turbo (Fast)</option>
+          <option value="flux-anime">Flux Anime</option>
+          <option value="flux-realism">Flux Realism</option>
         </select>
       </div>
     </div>
-
-    <button class="generate-btn" onclick="generateImage()">🎨 GENERATE ANIME IMAGE</button>
+    <button class="gen-btn" id="genBtn" onclick="generate()">🎨 GENERATE ANIME IMAGE</button>
   </div>
 
-  <div class="card result-area">
+  <div class="card result-card">
     <div class="loading" id="loading">
       <div class="spinner"></div>
-      <p>Creating your anime image...</p>
+      <p id="loadMsg">Creating your masterpiece...</p>
+      <p class="sub">Please wait 30-60 seconds</p>
+      <div class="progress-wrap">
+        <div class="prog-bar"><div class="prog-fill" id="progFill"></div></div>
+        <div class="prog-text" id="progText">0%</div>
+      </div>
     </div>
-    <img id="result-img" alt="Generated anime image">
-    <button class="download-btn" id="dl-btn" onclick="downloadImage()">⬇️ Download Image</button>
-    <div class="error-msg" id="error-msg">
-      ⚠️ Image could not be generated. Please try again or use a different prompt.
+    <img id="resultImg" alt="Generated anime image">
+    <button class="dl-btn" id="dlBtn" onclick="download()">⬇️ Download Image</button>
+    <div class="error" id="error">
+      ⚠️ Image could not be generated.<br>
+      <small>Try a simpler prompt or different model</small>
+      <br><button class="retry-btn" onclick="generate()">🔄 Retry</button>
     </div>
+    <div class="img-info" id="imgInfo"></div>
   </div>
 </div>
-
-<footer>Created by Abhishek63AA • Powered by Pollinations AI • 100% Free & Unlimited 🎨</footer>
+<footer>Created by Abhishek63AA • Powered by Pollinations AI • 100% Free 🎨</footer>
 
 <script>
-  let selectedStyle = '';
-  let currentImgUrl = '';
+let currentStyle = '';
+let currentUrl = '';
+let progInterval = null;
 
-  function selectStyle(btn, style) {
-    document.querySelectorAll('.style-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    selectedStyle = style;
-  }
+function setStyle(btn, style) {
+  document.querySelectorAll('.style-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentStyle = style;
+}
 
-  function setPrompt(text) {
-    document.getElementById('prompt').value = text;
-  }
+function setPrompt(text) {
+  document.getElementById('prompt').value = text;
+  document.getElementById('prompt').focus();
+}
 
-  function generateImage() {
-    const prompt = document.getElementById('prompt').value.trim();
-    if (!prompt) { alert('Please enter a prompt!'); return; }
+function startProgress(duration) {
+  const fill = document.getElementById('progFill');
+  const text = document.getElementById('progText');
+  const msgs = ['Initializing AI...','Processing prompt...','Generating pixels...','Adding anime style...','Rendering details...','Almost done!'];
+  let start = Date.now();
+  clearInterval(progInterval);
+  progInterval = setInterval(() => {
+    const elapsed = Date.now() - start;
+    const pct = Math.min(95, (elapsed / duration) * 100);
+    fill.style.width = pct + '%';
+    text.textContent = Math.round(pct) + '%';
+    const mi = Math.floor((pct / 100) * msgs.length);
+    if (mi < msgs.length) document.getElementById('loadMsg').textContent = msgs[mi];
+    if (pct >= 95) clearInterval(progInterval);
+  }, 200);
+}
 
-    const size = document.getElementById('size').value;
-    const quality = document.getElementById('quality').value;
-    const [w, h] = size.split('x');
+function generate() {
+  const prompt = document.getElementById('prompt').value.trim();
+  if (!prompt) { alert('Please enter a prompt!'); return; }
 
-    let fullPrompt = prompt;
-    if (selectedStyle) fullPrompt += ', ' + selectedStyle;
-    if (quality) fullPrompt += ', ' + quality;
-    fullPrompt += ', anime style, detailed illustration';
+  const size = document.getElementById('size').value;
+  const model = document.getElementById('model').value;
+  const [w, h] = size.split('x');
+  const seed = Math.floor(Math.random() * 999999);
 
-    const encodedPrompt = encodeURIComponent(fullPrompt);
-    const seed = Math.floor(Math.random() * 999999);
-    const url = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${w}&height=${h}&seed=${seed}&nologo=true`;
+  let full = prompt;
+  if (currentStyle) full += ', ' + currentStyle;
+  full += ', anime illustration, highly detailed, beautiful';
 
-    document.getElementById('loading').style.display = 'block';
-    document.getElementById('result-img').style.display = 'none';
-    document.getElementById('dl-btn').style.display = 'none';
-    document.getElementById('error-msg').style.display = 'none';
-    document.querySelector('.generate-btn').disabled = true;
+  // Build URL
+  const encoded = encodeURIComponent(full);
+  const url = `https://image.pollinations.ai/prompt/${encoded}?width=${w}&height=${h}&seed=${seed}&model=${model}&nologo=true&enhance=true`;
+  currentUrl = url;
 
-    currentImgUrl = url;
-    const img = document.getElementById('result-img');
-    img.src = url;
-    img.onload = () => {
+  // UI
+  document.getElementById('loading').style.display = 'block';
+  document.getElementById('resultImg').style.display = 'none';
+  document.getElementById('dlBtn').style.display = 'none';
+  document.getElementById('error').style.display = 'none';
+  document.getElementById('imgInfo').textContent = '';
+  document.getElementById('genBtn').disabled = true;
+  document.getElementById('progFill').style.width = '0%';
+  startProgress(45000);
+
+  // Load image
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+
+  const timeout = setTimeout(() => {
+    clearInterval(progInterval);
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('error').style.display = 'block';
+    document.getElementById('genBtn').disabled = false;
+  }, 120000); // 2 min timeout
+
+  img.onload = () => {
+    clearTimeout(timeout);
+    clearInterval(progInterval);
+    document.getElementById('progFill').style.width = '100%';
+    document.getElementById('progText').textContent = '100%';
+    setTimeout(() => {
       document.getElementById('loading').style.display = 'none';
-      img.style.display = 'block';
-      document.getElementById('dl-btn').style.display = 'inline-block';
-      document.querySelector('.generate-btn').disabled = false;
-    };
-    img.onerror = () => {
-      document.getElementById('loading').style.display = 'none';
-      document.getElementById('error-msg').style.display = 'block';
-      document.querySelector('.generate-btn').disabled = false;
-    };
-  }
+      const ri = document.getElementById('resultImg');
+      ri.src = img.src;
+      ri.style.display = 'block';
+      document.getElementById('dlBtn').style.display = 'inline-block';
+      document.getElementById('imgInfo').textContent = `"${prompt}" • ${w}×${h} • ${model}`;
+      document.getElementById('genBtn').disabled = false;
+    }, 300);
+  };
 
-  function downloadImage() {
+  img.onerror = () => {
+    clearTimeout(timeout);
+    clearInterval(progInterval);
+    // Try alternative URL without enhance
+    const url2 = `https://image.pollinations.ai/prompt/${encoded}?width=512&height=512&seed=${seed}&model=flux&nologo=true`;
+    const img2 = new Image();
+    img2.onload = () => {
+      clearTimeout(timeout);
+      clearInterval(progInterval);
+      document.getElementById('loading').style.display = 'none';
+      const ri = document.getElementById('resultImg');
+      ri.src = img2.src;
+      ri.style.display = 'block';
+      document.getElementById('dlBtn').style.display = 'inline-block';
+      document.getElementById('genBtn').disabled = false;
+    };
+    img2.onerror = () => {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('error').style.display = 'block';
+      document.getElementById('genBtn').disabled = false;
+    };
+    img2.src = url2;
+  };
+
+  img.src = url;
+}
+
+function download() {
+  if (currentUrl) {
     const a = document.createElement('a');
-    a.href = currentImgUrl;
+    a.href = document.getElementById('resultImg').src;
     a.download = 'anime-image.jpg';
     a.target = '_blank';
     a.click();
   }
+}
 </script>
 </body>
 </html>
